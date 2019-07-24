@@ -574,6 +574,16 @@ class RestServer {
 		header('Access-Control-Allow-Headers: X-Requested-With, content-type, access-control-allow-origin, access-control-allow-methods, access-control-allow-headers, Authorization');
 	}
 
+    /**
+     * @param bool $useCors
+     * @return $this
+     */
+    public function setUseCors($useCors)
+    {
+        $this->useCors = $useCors;
+        return $this;
+    }
+
 	private $codes = array(
 		'100' => 'Continue',
 		'200' => 'OK',
