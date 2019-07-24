@@ -118,18 +118,18 @@ class RestServer {
 		$this->method = $this->getMethod();
 		$this->format = $this->getFormat();
 
+        //preflight requests response
 		if (($this->useCors) && ($this->method == 'OPTIONS')) {
+		    $this->setStatus(204);
 			$this->corsHeaders();
 			exit;
-		}
+		} else if (!$this->useCors && $this->method == 'OPTIONS') {
+		    $this->setStatus(400);
+		    exit;
+        }
 
 		if ($this->method == 'PUT' || $this->method == 'POST' || $this->method == 'PATCH') {
 			$this->data = $this->getData();
-		}
-
-		//preflight requests response
-		if ($this->method == 'OPTIONS' && getallheaders()->Access-Control-Request-Headers) {
-			$this->sendData($this->options());
 		}
 
 		list($obj, $method, $params, $this->params, $noAuth) = $this->findUrl();
