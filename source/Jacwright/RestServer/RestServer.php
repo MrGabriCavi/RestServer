@@ -89,13 +89,19 @@ class RestServer {
 	}
 
 	public function  __destruct() {
-		if ($this->mode == 'production' && !$this->cached) {
-			if (function_exists('apc_store')) {
-				apc_store('urlMap', $this->map);
-			} else {
-				file_put_contents($this->cacheDir . '/urlMap.cache', serialize($this->map));
-			}
-		}
+        if ($this->mode == 'production' && !$this->cached && count($this->map) > 0) {
+            if (function_exists('apc_store')) {
+                apc_store('urlMap', $this->map);
+            } else {
+                file_put_contents($this->cacheDir . '/urlMap.cache', serialize($this->map));
+            }
+        } else if($this->mode == 'production' && !$this->cached && count($this->map) === 0) {
+            if (function_exists('apc_delete')) {
+                apc_delete('urlMap');
+            } else {
+                @unlink($this->cacheDir . '/urlMap.cache');
+            }
+        }
 	}
 
 	public function setAuthHandler($authHandler) {
