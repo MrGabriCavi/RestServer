@@ -155,7 +155,7 @@ class RestServer {
 					$data = $this->unauthorized($obj);
 					$this->sendData($data);
 				} else {
-					$result = call_user_func_array(array($obj, $method), $params);
+					$result = $this->callAction($obj, $method, $params);
 
 					if ($result !== null) {
 						$this->sendData($result);
@@ -168,6 +168,10 @@ class RestServer {
 			$this->handleError(404);
 		}
 	}
+
+	protected function callAction($obj, $method, $params) {
+	    return call_user_func_array(array($obj, $method), $params);
+    }
 
 	public function setRootPath($path) {
 		$this->rootPath = '/' . trim($path, '/');
