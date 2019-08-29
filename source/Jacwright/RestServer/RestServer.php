@@ -571,7 +571,7 @@ class RestServer {
 		foreach($allowedOrigin as $allowed_origin) { // to support multiple origins
 			header("Access-Control-Allow-Origin: $allowed_origin");
 		}
-		header('Access-Control-Allow-Methods: GET,POST,PUT,DELETE,OPTIONS');
+		header('Access-Control-Allow-Methods: GET,POST,PUT,DELETE,PATCH,OPTIONS');
 		header('Access-Control-Allow-Credential: true');
 		header('Access-Control-Allow-Headers: X-Requested-With, content-type, access-control-allow-origin, access-control-allow-methods, access-control-allow-headers, Authorization');
 	}
