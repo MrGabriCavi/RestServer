@@ -30,6 +30,8 @@ require_once(__DIR__ . '/RestException.php');
 require_once(__DIR__ . '/AuthServer.php');
 require_once(__DIR__ . '/Auth/HTTPAuthServer.php');
 
+//used to clear cache v1.4.3
+
 use Exception;
 use ReflectionClass;
 use ReflectionObject;
