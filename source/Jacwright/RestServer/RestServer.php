@@ -89,13 +89,19 @@ class RestServer {
 	}
 
 	public function  __destruct() {
-		if ($this->mode == 'production' && !$this->cached) {
-			if (function_exists('apc_store')) {
-				apc_store('urlMap', $this->map);
-			} else {
-				file_put_contents($this->cacheDir . '/urlMap.cache', serialize($this->map));
-			}
-		}
+        if ($this->mode == 'production' && !$this->cached && count($this->map) > 0) {
+            if (function_exists('apc_store')) {
+                apc_store('urlMap', $this->map);
+            } else {
+                file_put_contents($this->cacheDir . '/urlMap.cache', serialize($this->map));
+            }
+        } else if($this->mode == 'production' && !$this->cached && count($this->map) === 0) {
+            if (function_exists('apc_delete')) {
+                apc_delete('urlMap');
+            } else {
+                @unlink($this->cacheDir . '/urlMap.cache');
+            }
+        }
 	}
 
 	public function setAuthHandler($authHandler) {
@@ -118,18 +124,18 @@ class RestServer {
 		$this->method = $this->getMethod();
 		$this->format = $this->getFormat();
 
+        //preflight requests response
 		if (($this->useCors) && ($this->method == 'OPTIONS')) {
+		    $this->setStatus(204);
 			$this->corsHeaders();
 			exit;
-		}
+		} else if (!$this->useCors && $this->method == 'OPTIONS') {
+		    $this->setStatus(400);
+		    exit;
+        }
 
 		if ($this->method == 'PUT' || $this->method == 'POST' || $this->method == 'PATCH') {
 			$this->data = $this->getData();
-		}
-
-		//preflight requests response
-		if ($this->method == 'OPTIONS' && getallheaders()->Access-Control-Request-Headers) {
-			$this->sendData($this->options());
 		}
 
 		list($obj, $method, $params, $this->params, $noAuth) = $this->findUrl();
@@ -149,7 +155,7 @@ class RestServer {
 					$data = $this->unauthorized($obj);
 					$this->sendData($data);
 				} else {
-					$result = call_user_func_array(array($obj, $method), $params);
+					$result = $this->callAction($obj, $method, $params);
 
 					if ($result !== null) {
 						$this->sendData($result);
@@ -162,6 +168,10 @@ class RestServer {
 			$this->handleError(404);
 		}
 	}
+
+	protected function callAction($obj, $method, $params) {
+	    return call_user_func_array(array($obj, $method), $params);
+    }
 
 	public function setRootPath($path) {
 		$this->rootPath = '/' . trim($path, '/');
@@ -568,13 +578,21 @@ class RestServer {
 		if (in_array($currentOrigin, $allowedOrigin)) {
 			$allowedOrigin = array($currentOrigin); // array ; if there is a match then only one is enough
 		}
-		foreach($allowedOrigin as $allowed_origin) { // to support multiple origins
-			header("Access-Control-Allow-Origin: $allowed_origin");
-		}
+		header('Access-Control-Allow-Origin: ' . implode(', ', $allowedOrigin));
 		header('Access-Control-Allow-Methods: GET,POST,PUT,DELETE,PATCH,OPTIONS');
 		header('Access-Control-Allow-Credential: true');
 		header('Access-Control-Allow-Headers: X-Requested-With, content-type, access-control-allow-origin, access-control-allow-methods, access-control-allow-headers, Authorization');
 	}
+
+    /**
+     * @param bool $useCors
+     * @return $this
+     */
+    public function setUseCors($useCors)
+    {
+        $this->useCors = $useCors;
+        return $this;
+    }
 
 	private $codes = array(
 		'100' => 'Continue',
